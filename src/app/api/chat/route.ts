@@ -3,10 +3,10 @@ import { marketData } from "@/lib/market-data";
 import type { ChartRange } from "@/lib/market-data";
 import { verifyQuote } from "@/lib/market-data/verify";
 import { runDcf } from "@/lib/finance/dcf";
-import { getAiProvider, SYSTEM_PROMPT } from "@/lib/ai";
+import { getAiProviders, SYSTEM_PROMPT } from "@/lib/ai";
 import { TOOL_DEFINITIONS, executeTool } from "@/lib/ai/tools";
 import type { ToolExecutionResult } from "@/lib/ai/tools";
-import type { AiMessage } from "@/lib/ai/types";
+import type { AiMessage, AiProvider } from "@/lib/ai/types";
 import type { ResearchTrailEntry, ToolCard } from "@/lib/types";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
@@ -297,55 +297,73 @@ async function buildToolCardsFromTrail(trail: ToolExecutionResult[]): Promise<To
 
 const MAX_HISTORY_MESSAGES = 20;
 
-/** Returns null (never throws) so the caller can fall back to deterministic logic
- * if no provider is configured, the API call fails, or anything else goes wrong. */
-async function handleWithAi(history: { role: "user" | "assistant"; content: string }[]) {
-  const provider = getAiProvider();
-  if (!provider) return null;
+/** Runs one provider's full tool-calling loop against a fresh copy of the
+ * conversation. Throws on failure so the caller can try the next provider. */
+async function runProviderLoop(
+  provider: { name: string; provider: AiProvider },
+  history: { role: "user" | "assistant"; content: string }[],
+  systemPrompt: string
+) {
+  const messages: AiMessage[] = history
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((m) => ({ role: m.role, content: m.content }));
+  const rawTrail: ToolExecutionResult[] = [];
 
-  try {
-    const systemPrompt = await buildSystemPrompt();
-    const messages: AiMessage[] = history
-      .slice(-MAX_HISTORY_MESSAGES)
-      .map((m) => ({ role: m.role, content: m.content }));
-    const rawTrail: ToolExecutionResult[] = [];
+  for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+    const response = await provider.provider.generateResponse(messages, TOOL_DEFINITIONS, systemPrompt);
 
-    for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
-      const response = await provider.generateResponse(messages, TOOL_DEFINITIONS, systemPrompt);
-
-      if (response.toolCalls.length === 0) {
-        const trail: ResearchTrailEntry[] = rawTrail.map(({ tool, args, summary }) => ({ tool, args, summary }));
-        return NextResponse.json({
-          content: response.content ?? "I wasn't able to put together an answer — try rephrasing.",
-          toolCards: await buildToolCardsFromTrail(rawTrail),
-          trail,
-          isAdvice: true,
-        });
-      }
-
-      messages.push({ role: "assistant", content: response.content ?? "", toolCalls: response.toolCalls });
-
-      for (const call of response.toolCalls) {
-        const execResult = await executeTool(call.name, call.arguments, rawTrail);
-        rawTrail.push(execResult);
-        messages.push({
-          role: "tool",
-          content: JSON.stringify(execResult.result),
-          toolCallId: call.id,
-        });
-      }
+    if (response.toolCalls.length === 0) {
+      const trail: ResearchTrailEntry[] = rawTrail.map(({ tool, args, summary }) => ({ tool, args, summary }));
+      return NextResponse.json({
+        content: response.content ?? "I wasn't able to put together an answer — try rephrasing.",
+        toolCards: await buildToolCardsFromTrail(rawTrail),
+        trail,
+        isAdvice: true,
+      });
     }
 
-    const trail: ResearchTrailEntry[] = rawTrail.map(({ tool, args, summary }) => ({ tool, args, summary }));
-    return NextResponse.json({
-      content: "I gathered a lot of data on this but couldn't wrap up cleanly — try narrowing the question.",
-      toolCards: await buildToolCardsFromTrail(rawTrail),
-      trail,
-    });
-  } catch (err) {
-    console.error("[chat] AI provider failed, falling back to deterministic logic:", err);
-    return null;
+    messages.push({ role: "assistant", content: response.content ?? "", toolCalls: response.toolCalls });
+
+    for (const call of response.toolCalls) {
+      const execResult = await executeTool(call.name, call.arguments, rawTrail);
+      rawTrail.push(execResult);
+      messages.push({
+        role: "tool",
+        content: JSON.stringify(execResult.result),
+        toolCallId: call.id,
+        toolName: call.name,
+      });
+    }
   }
+
+  const trail: ResearchTrailEntry[] = rawTrail.map(({ tool, args, summary }) => ({ tool, args, summary }));
+  return NextResponse.json({
+    content: "I gathered a lot of data on this but couldn't wrap up cleanly — try narrowing the question.",
+    toolCards: await buildToolCardsFromTrail(rawTrail),
+    trail,
+  });
+}
+
+/** Returns null (never throws) so the caller can fall back to deterministic logic
+ * if no provider is configured, or every configured provider fails. Tries each
+ * configured AI provider in order (e.g. Groq then Gemini) before giving up —
+ * a rate limit or outage on one no longer takes the whole AI path down. */
+async function handleWithAi(history: { role: "user" | "assistant"; content: string }[]) {
+  const providers = getAiProviders();
+  if (providers.length === 0) return null;
+
+  const systemPrompt = await buildSystemPrompt();
+
+  for (const candidate of providers) {
+    try {
+      return await runProviderLoop(candidate, history, systemPrompt);
+    } catch (err) {
+      console.error(`[chat] ${candidate.name} provider failed:`, err);
+    }
+  }
+
+  console.error("[chat] all AI providers failed, falling back to deterministic logic");
+  return null;
 }
 
 export async function POST(req: NextRequest) {

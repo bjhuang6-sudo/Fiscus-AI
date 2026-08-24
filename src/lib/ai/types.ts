@@ -5,6 +5,9 @@ export interface AiMessage {
   content: string;
   /** Set on role:"tool" messages — which tool call this result answers. */
   toolCallId?: string;
+  /** Set on role:"tool" messages — the tool's name, since some providers
+   *  (Gemini) key function results by name rather than call id. */
+  toolName?: string;
   /** Set on role:"assistant" messages that requested tool calls. */
   toolCalls?: AiToolCall[];
 }

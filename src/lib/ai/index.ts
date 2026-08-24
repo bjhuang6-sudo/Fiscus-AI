@@ -4,29 +4,30 @@ import type { AiProvider } from "./types";
 
 export * from "./types";
 
-/** Which provider is live. Gemini/Claude stay implemented-but-inactive for an easy swap. */
-type ProviderName = "groq" | "gemini" | "claude";
-const ACTIVE_PROVIDER: ProviderName = "groq";
-
 /**
- * Returns null when no key is configured, so callers (the chat route) can
- * fall back to deterministic logic instead of crashing.
+ * Every configured provider, in priority order. The chat route tries each in
+ * turn — if Groq errors or gets rate-limited, Gemini picks up the same
+ * conversation instead of dropping straight to the deterministic fallback.
+ * Only providers with a real API key are included; Claude stays a stub with
+ * no key wired up yet (see providers/claude.ts).
  */
+export function getAiProviders(): { name: string; provider: AiProvider }[] {
+  const providers: { name: string; provider: AiProvider }[] = [];
+
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) providers.push({ name: "groq", provider: new GroqProvider(groqKey) });
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) providers.push({ name: "gemini", provider: new GeminiProvider(geminiKey) });
+
+  return providers;
+}
+
+/** Convenience wrapper for one-shot call sites (title generation, memory
+ * compile, scoring) that don't need multi-provider fallback — just the best
+ * available provider, or null if none is configured. */
 export function getAiProvider(): AiProvider | null {
-  switch (ACTIVE_PROVIDER) {
-    case "groq": {
-      const apiKey = process.env.GROQ_API_KEY;
-      if (!apiKey) return null;
-      return new GroqProvider(apiKey);
-    }
-    case "gemini": {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) return null;
-      return new GeminiProvider(apiKey);
-    }
-    case "claude":
-      return null; // ClaudeProvider is a stub — see providers/claude.ts
-  }
+  return getAiProviders()[0]?.provider ?? null;
 }
 
 export const SYSTEM_PROMPT = `You are Fiscus AI, a finance-focused analyst assistant. You talk like a sharp, knowledgeable friend walking someone through markets — not a terminal dumping numbers.

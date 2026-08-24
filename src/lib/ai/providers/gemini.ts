@@ -27,17 +27,15 @@ function toGeminiContents(messages: AiMessage[]): GeminiContent[] {
       }
       contents.push({ role: "model", parts });
     } else if (m.role === "tool") {
-      // Gemini expects tool results back as a "user" turn containing functionResponse parts,
-      // keyed by function NAME (not a call id). This provider is currently inactive
-      // (see src/lib/ai/index.ts) — the chat route now passes the real tool-call id in
-      // toolCallId (needed for Groq/OpenAI-style protocols), so this mapping needs to be
-      // revisited (track name alongside id) before Gemini is made active again.
+      // Gemini expects tool results back as a "user" turn containing functionResponse
+      // parts, keyed by function NAME (not a call id, which Groq/OpenAI-style
+      // protocols use instead) — toolName carries that through from the chat route.
       contents.push({
         role: "user",
         parts: [
           {
             functionResponse: {
-              name: m.toolCallId ?? "unknown_tool",
+              name: m.toolName ?? "unknown_tool",
               response: { result: m.content },
             },
           },
