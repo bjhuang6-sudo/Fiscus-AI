@@ -1,0 +1,154 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-inter);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-negative: var(--negative);
+  --color-negative-foreground: var(--negative-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Light mode: off-white "trading desk by day" surface, deep bull green accent */
+:root {
+  --background: oklch(0.985 0.002 247);
+  --foreground: oklch(0.16 0.006 247);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0.006 247);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.006 247);
+  --primary: oklch(0.46 0.13 152);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.003 247);
+  --secondary-foreground: oklch(0.22 0.006 247);
+  --muted: oklch(0.96 0.003 247);
+  --muted-foreground: oklch(0.5 0.006 247);
+  --accent: oklch(0.94 0.03 152);
+  --accent-foreground: oklch(0.3 0.1 152);
+  --destructive: oklch(0.55 0.22 27);
+  --border: oklch(0.9 0.004 247);
+  --input: oklch(0.9 0.004 247);
+  --ring: oklch(0.46 0.13 152 / 40%);
+  --positive: oklch(0.46 0.13 152);
+  --positive-foreground: oklch(0.99 0 0);
+  --negative: oklch(0.55 0.22 27);
+  --negative-foreground: oklch(0.99 0 0);
+  /* Validated categorical chart palette — fixed hue order is the CVD-safety
+     mechanism (see dataviz skill); don't reorder without re-running the validator. */
+  --series-1: #2a78d6;
+  --series-2: #008300;
+  --series-3: #e87ba4;
+  --series-4: #eda100;
+  --series-5: #1baf7a;
+  --series-6: #eb6834;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --radius: 0.5rem;
+  --sidebar: oklch(0.97 0.003 247);
+  --sidebar-foreground: oklch(0.16 0.006 247);
+  --sidebar-primary: oklch(0.46 0.13 152);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.02 152);
+  --sidebar-accent-foreground: oklch(0.3 0.1 152);
+  --sidebar-border: oklch(0.9 0.004 247);
+  --sidebar-ring: oklch(0.46 0.13 152 / 40%);
+}
+
+/* Dark mode (default): near-black trading desk, bright bull green accent for contrast */
+.dark {
+  --background: oklch(0.14 0.004 247);
+  --foreground: oklch(0.96 0.002 247);
+  --card: oklch(0.18 0.005 247);
+  --card-foreground: oklch(0.96 0.002 247);
+  --popover: oklch(0.18 0.005 247);
+  --popover-foreground: oklch(0.96 0.002 247);
+  --primary: oklch(0.72 0.19 152);
+  --primary-foreground: oklch(0.14 0.02 152);
+  --secondary: oklch(0.24 0.005 247);
+  --secondary-foreground: oklch(0.96 0.002 247);
+  --muted: oklch(0.22 0.005 247);
+  --muted-foreground: oklch(0.65 0.008 247);
+  --accent: oklch(0.26 0.04 152);
+  --accent-foreground: oklch(0.85 0.13 152);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.72 0.19 152 / 45%);
+  --positive: oklch(0.72 0.19 152);
+  --positive-foreground: oklch(0.14 0.02 152);
+  --negative: oklch(0.65 0.2 25);
+  --negative-foreground: oklch(0.14 0 0);
+  --series-1: #3987e5;
+  --series-2: #008300;
+  --series-3: #d55181;
+  --series-4: #c98500;
+  --series-5: #199e70;
+  --series-6: #d95926;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --sidebar: oklch(0.12 0.004 247);
+  --sidebar-foreground: oklch(0.96 0.002 247);
+  --sidebar-primary: oklch(0.72 0.19 152);
+  --sidebar-primary-foreground: oklch(0.14 0.02 152);
+  --sidebar-accent: oklch(0.24 0.005 247);
+  --sidebar-accent-foreground: oklch(0.85 0.13 152);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.72 0.19 152 / 45%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+}

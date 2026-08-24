@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node -v)",
+      "PowerShell(npm -v)",
+      "PowerShell(winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements --silent)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node -v; npm -v)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node -v; npm -v; Get-Command node | Select-Object -ExpandProperty Source)",
+      "Bash(ls \"/c/Program Files/nodejs\" | head -20)",
+      "Bash(curl -s -A 'FiscusAI research@fiscus.ai' -w '\\\\nsize:%{size_download} status:%{http_code}\\\\n' https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json -o /c/Users/bjhua/AppData/Local/Temp/claude/C--Users-bjhua-OneDrive-Fiscus-AI/dc1256e4-d763-4f7f-8a9a-9c2ad88ee4f7/scratchpad/facts.json)"
+    ]
+  }
+}
