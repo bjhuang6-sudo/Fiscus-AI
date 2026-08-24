@@ -1,6 +1,6 @@
 import type { AiMessage, AiProvider, AiResponse, AiTool, AiToolCall } from "../types";
 
-const MODEL = "llama-3.3-70b-versatile";
+const MODEL = "openai/gpt-oss-120b";
 const MAX_ATTEMPTS = 3;
 
 // Llama 3.3 sometimes writes its tool-call intent out as literal text

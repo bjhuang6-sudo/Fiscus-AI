@@ -151,6 +151,17 @@ export interface ToolExecutionResult {
 
 function summarize(tool: string, result: unknown): string {
   if (result === null || result === undefined) return "No data returned.";
+
+  // Surface DCF/LBO input corrections up front — otherwise they get silently
+  // truncated out of the JSON preview below, hiding exactly the detail that
+  // matters most for trusting the numbers.
+  if ((tool === "run_dcf" || tool === "run_lbo") && typeof result === "object") {
+    const corrections = (result as { corrections?: string[] }).corrections;
+    if (corrections && corrections.length > 0) {
+      return `Corrected ${corrections.length} input${corrections.length !== 1 ? "s" : ""} against real fundamentals: ${corrections.join("; ")}`;
+    }
+  }
+
   try {
     const s = JSON.stringify(result);
     return s.length > 200 ? `${s.slice(0, 200)}…` : s;
